@@ -1,0 +1,40 @@
+[workspace]
+members = [
+    "crates/thirtyssh",
+    "crates/secretbuf",
+    "crates/pageant",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "Apache-2.0"
+repository = "https://github.com/thirtyfile/ThirtySSH"
+authors = ["ThirtySSH contributors"]
+keywords = ["ssh", "ssh2", "async", "tokio"]
+categories = ["network-programming", "asynchronous", "cryptography"]
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unimplemented = "warn"
+undocumented_unsafe_blocks = "warn"
+
+[workspace.dependencies]
+bytes = "1"
+getrandom = "0.4"
+libc = "0.2"
+sha2 = "0.11"
+ssh-encoding = "0.3"
+tokio = "1"
+zeroize = "1"
+
+# Big-integer arithmetic (DH group exchange safe-prime checks, RSA) is far too
+# slow unoptimized; keep these fast in `cargo test` and debug builds.
+[profile.dev.package.crypto-bigint]
+opt-level = 3
+
+[profile.dev.package.crypto-primes]
+opt-level = 3

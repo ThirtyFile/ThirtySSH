@@ -1,0 +1,100 @@
+[package]
+name = "thirtyssh"
+description = "Asynchronous SSH-2 client and server library for Tokio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[features]
+default = ["flate2", "ring", "rsa"]
+_bench = ["dep:criterion"]
+aws-lc-rs = ["dep:aws-lc-rs"]
+des = ["dep:des"]
+dsa = ["ssh-key/dsa"]
+flate2 = ["dep:flate2"]
+pre-rfc8410-ed25519 = []
+ring = ["dep:ring"]
+rsa = ["dep:pkcs1", "dep:rsa"]
+serde = ["ssh-key/serde"]
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "ciphers"
+harness = false
+required-features = ["_bench"]
+
+[dependencies]
+aes = { version = "0.9", features = ["zeroize"] }
+argon2 = { version = "0.6", default-features = false, features = ["zeroize"] }
+aws-lc-rs = { version = "1.19", optional = true }
+bytes = { workspace = true }
+cbc = { version = "0.2", features = ["zeroize"] }
+crypto-bigint = { version = "0.7.11", default-features = false, features = ["alloc", "zeroize"] }
+crypto-primes = { version = "0.7.2", default-features = false }
+criterion = { version = "0.7", features = ["html_reports"], optional = true }
+ctr = { version = "0.10", features = ["zeroize"] }
+data-encoding = "2"
+des = { version = "0.9", optional = true, features = ["zeroize"] }
+ed25519 = { version = "3", features = ["pkcs8", "zeroize"] }
+flate2 = { version = "1.1", optional = true }
+getrandom = { workspace = true, features = ["sys_rng"] }
+hmac = { version = "0.13", features = ["zeroize"] }
+md-5 = { version = "0.11", default-features = false, features = ["zeroize"] }
+ml-kem = { version = "0.3.4", default-features = false, features = ["alloc", "hazmat", "zeroize"] }
+p256 = { version = "0.14", default-features = false, features = ["alloc", "ecdh", "pkcs8"] }
+p384 = { version = "0.14", default-features = false, features = ["alloc", "ecdh", "pkcs8"] }
+p521 = { version = "0.14", default-features = false, features = ["alloc", "ecdh", "pkcs8"] }
+pem-rfc7468 = "1"
+pkcs1 = { version = "0.8", features = ["alloc"], optional = true }
+pkcs5 = "0.8"
+pkcs8 = { version = "0.11", features = ["encryption", "pem", "std"] }
+ring = { version = "0.17.14", optional = true }
+rsa = { version = "0.10", default-features = false, features = ["pkcs1v15"], optional = true }
+sec1 = "0.8"
+sha1 = { version = "0.11", features = ["oid", "zeroize"] }
+sha2 = { workspace = true, features = ["oid", "zeroize"] }
+signature = "3"
+ssh-encoding = { workspace = true, features = ["bigint"] }
+ssh-key = { version = "=0.7.0-rc.11", default-features = false, features = ["ed25519", "encryption", "p256", "p384", "p521", "std"] }
+subtle = "2"
+thirtyssh-secretbuf = { path = "../secretbuf", version = "0.1.0", features = ["ssh-encoding"] }
+tokio = { workspace = true, features = ["io-util", "macros", "rt", "sync", "time"] }
+zeroize = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["net"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+getrandom = { workspace = true, features = ["wasm_js"] }
+gloo-timers = { version = "0.4", features = ["futures"] }
+ring = { version = "0.17.14", optional = true, features = ["wasm32_unknown_unknown_js"] }
+wasm-bindgen-futures = "0.4"
+web-time = "1.1"
+
+[target.'cfg(windows)'.dependencies]
+aws-lc-rs = { version = "1.19", optional = true, features = ["prebuilt-nasm"] }
+pageant = { package = "thirtyssh-pageant", path = "../pageant", version = "0.1.0" }
+
+[target."cfg(any(unix, windows))".dependencies]
+tempfile = "3"
+
+[target."cfg(any(unix, windows))".dev-dependencies]
+portable-pty = "0.9"
+
+[target."cfg(unix)".dependencies]
+libc = { workspace = true }
+
+[target."cfg(unix)".dev-dependencies]
+nix = { version = "0.28", features = ["fs"] }
+
+[dev-dependencies]
+ring = "0.17.14"
+tokio = { workspace = true, features = ["net", "process", "rt", "time", "test-util"] }

@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt, clippy, test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+
+  msrv:
+    name: minimum supported Rust version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Keep in step with `rust-version` in Cargo.toml.
+      - uses: dtolnay/rust-toolchain@1.89
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --workspace --all-targets --all-features --locked
+
+  features:
+    name: feature combinations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      # Every optional backend, cipher and key type at once.
+      - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+      - run: cargo test --workspace --all-features --locked
+      # The smallest supported build: one crypto backend and nothing else.
+      - run: cargo clippy -p thirtyssh --all-targets --no-default-features --features ring --locked -- -D warnings
+      - run: cargo test -p thirtyssh --no-default-features --features ring --locked
+      - run: cargo doc --workspace --no-deps --all-features --locked
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  interop:
+    name: OpenSSH interoperability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Install OpenSSH
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server openssh-client python3
+          sudo mkdir -p /run/sshd
+      # ThirtySSH server against the OpenSSH client binaries.
+      - name: OpenSSH client against ThirtySSH
+        run: cargo test --locked -p thirtyssh --test openssh -- --ignored
+      # Agent protocol against ssh-agent and ssh-add, and key files against
+      # the ones ssh-keygen and openssl write.
+      - name: OpenSSH agent and key tools
+        run: |
+          sudo apt-get install -y openssl
+          cargo test --locked -p thirtyssh --test agent --test agent_server             --test key_formats --test pkcs -- --ignored
+      # ThirtySSH client against a disposable sshd. The fixture needs a
+      # non-root login account. That account reads the toolchain and writes
+      # only its own copy of the checkout and its own Cargo home.
+      - name: Create the test account
+        run: |
+          sudo useradd -m -s /bin/bash tester
+          sudo usermod -p '*' tester
+          chmod a+x "$HOME"
+          chmod -R a+rX "$HOME/.cargo/bin" "$HOME/.rustup"
+          sudo cp -a "$GITHUB_WORKSPACE" /tmp/thirtyssh
+          sudo mkdir /tmp/thirtyssh-cargo
+          sudo chown -R tester /tmp/thirtyssh /tmp/thirtyssh-cargo
+      - name: ThirtySSH against OpenSSH sshd
+        working-directory: /tmp/thirtyssh
+        run: |
+          sudo env "PATH=$PATH" "RUSTUP_HOME=$HOME/.rustup" CARGO_HOME=/tmp/thirtyssh-cargo \
+            python3 tools/run_openssh_server.py --user tester --target-dir /tmp/thirtyssh/target
+      # The same tests with sshd started by the test account itself, inside
+      # the Bubblewrap sandbox the fixture uses when it has no root access.
+      - name: ThirtySSH against a sandboxed sshd without root
+        working-directory: /tmp/thirtyssh
+        run: |
+          sudo apt-get install -y bubblewrap
+          # Ubuntu denies user namespaces to unprivileged programs by default.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          mkdir /tmp/sshd-image
+          (cd /tmp/sshd-image && apt-get download openssh-server && dpkg-deb -x openssh-server_*.deb .)
+          sudo -u tester env "PATH=$PATH" "RUSTUP_HOME=$HOME/.rustup" CARGO_HOME=/tmp/thirtyssh-cargo \
+            python3 tools/run_openssh_server.py --image /tmp/sshd-image --user tester \
+            --target-dir /tmp/thirtyssh/target
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+
+  audit:
+    name: cargo-audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

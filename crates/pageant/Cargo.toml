@@ -1,0 +1,39 @@
+[package]
+name = "thirtyssh-pageant"
+description = "Client for the PuTTY Pageant SSH agent on Windows"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[features]
+default = ["named-pipe", "window-message"]
+named-pipe = [
+    "dep:sha2", "tokio/net", "tokio/time",
+    "windows/Win32_Globalization", "windows/Win32_Security_Authentication_Identity", "windows/Win32_Security_Authorization",
+    "windows/Win32_Security_Cryptography", "windows/Win32_Storage_FileSystem",
+    "windows/Win32_System_WindowsProgramming",
+]
+window-message = [
+    "dep:getrandom", "dep:zeroize", "tokio/rt",
+    "windows/Win32_System_DataExchange", "windows/Win32_System_Memory",
+    "windows/Win32_System_SystemServices", "windows/Win32_UI_WindowsAndMessaging",
+]
+
+[lints]
+workspace = true
+
+[target.'cfg(windows)'.dependencies]
+getrandom = { workspace = true, features = ["sys_rng"], optional = true }
+sha2 = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["io-util"] }
+windows = { version = "0.62", features = ["Win32_Security", "Win32_System_Threading"] }
+zeroize = { workspace = true, optional = true }
+
+[target.'cfg(windows)'.dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "test-util"] }

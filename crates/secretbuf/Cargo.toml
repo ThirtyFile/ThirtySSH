@@ -1,0 +1,31 @@
+[package]
+name = "thirtyssh-secretbuf"
+description = "Page-locked byte buffer for secret material, erased when released"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+publish = false
+
+[features]
+ssh-encoding = ["dep:ssh-encoding"]
+
+[lints]
+workspace = true
+
+[dependencies]
+ssh-encoding = { workspace = true, optional = true }
+zeroize = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Memory", "Win32_System_SystemInformation"] }
+
+[dev-dependencies]
+bytes = { workspace = true }
