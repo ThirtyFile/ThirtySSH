@@ -1,0 +1,55 @@
+name: Release
+
+# Publishes the workspace to crates.io when a version tag is pushed:
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# The tag must name the version in Cargo.toml. The crates.io token is the
+# repository secret CARGO_REGISTRY_TOKEN.
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+# A published version cannot be replaced, so never run two releases at once.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish to crates.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check that the tag names the workspace version
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 --locked |
+            python3 -c 'import json, sys; print(json.load(sys.stdin)["packages"][0]["version"])')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match Cargo.toml version $version"
+            exit 1
+          fi
+      # What is published is what was tested.
+      - run: cargo test --workspace --locked
+      # Packages and builds every crate before anything is uploaded.
+      - run: cargo publish --workspace --locked --dry-run
+      # Uploads the crates in dependency order. If it stops part way, the
+      # crates already uploaded stay published: fix the cause, then publish
+      # the remaining ones by hand with `cargo publish -p NAME`.
+      - run: cargo publish --workspace --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

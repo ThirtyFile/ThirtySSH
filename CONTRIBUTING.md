@@ -50,3 +50,18 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 By contributing you agree that your contribution is licensed under
 Apache-2.0.
+
+## Releasing
+
+Maintainers publish a release by tagging the version that `Cargo.toml`
+declares:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The `Release` workflow tests the workspace, publishes the three crates to
+crates.io in dependency order and creates the GitHub release. Update
+`CHANGELOG.md` and the version in `Cargo.toml` before tagging. A published
+version cannot be replaced.
