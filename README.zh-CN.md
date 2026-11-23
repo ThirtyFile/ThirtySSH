@@ -33,7 +33,7 @@
 
 ```toml
 [dependencies]
-thirtyssh = "0.1"
+thirtyssh = "0.2"
 tokio = { version = "1", features = ["macros", "rt"] }
 ```
 

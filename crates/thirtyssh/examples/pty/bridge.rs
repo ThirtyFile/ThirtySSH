@@ -177,13 +177,19 @@ fn monitor(
 
 #[cfg(unix)]
 fn set_nonblocking(master: &dyn MasterPty) -> io::Result<()> {
-    use nix::fcntl::{FcntlArg, OFlag, fcntl};
-
     let fd = master
         .as_raw_fd()
         .ok_or_else(|| io::Error::other("missing Unix PTY descriptor"))?;
-    let flags = OFlag::from_bits_retain(fcntl(fd, FcntlArg::F_GETFL)?);
-    fcntl(fd, FcntlArg::F_SETFL(flags | OFlag::O_NONBLOCK))?;
+    // SAFETY: `fd` is the PTY master's descriptor, open for as long as
+    // `master` is borrowed. F_GETFL and F_SETFL take no pointer arguments.
+    let flags = unsafe { libc::fcntl(fd, libc::F_GETFL) };
+    if flags < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: As above.
+    if unsafe { libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
     Ok(())
 }
 
