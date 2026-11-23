@@ -6,10 +6,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+readme = "README.md"
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
-publish = false
 
 [features]
 default = ["named-pipe", "window-message"]
@@ -37,3 +37,7 @@ zeroize = { workspace = true, optional = true }
 
 [target.'cfg(windows)'.dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "test-util"] }
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+targets = ["x86_64-pc-windows-msvc"]

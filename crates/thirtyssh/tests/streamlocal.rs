@@ -95,6 +95,18 @@ fn streamlocal_layouts_preserve_socket_bytes_and_consume_reserved_fields() {
 #[cfg(unix)]
 mod unix {
     use super::*;
+
+    // Socket paths are bytes, not text, and the names here prove that where
+    // the file system allows it. Apple's file systems refuse names that are
+    // not valid UTF-8, so there the names only leave ASCII.
+    #[cfg(not(target_vendor = "apple"))]
+    const DIRECT_NAME: &[u8] = b"direct-\xff.sock";
+    #[cfg(not(target_vendor = "apple"))]
+    const REMOTE_NAME: &[u8] = b"remote-\xfe.sock";
+    #[cfg(target_vendor = "apple")]
+    const DIRECT_NAME: &[u8] = "direct-\u{e9}.sock".as_bytes();
+    #[cfg(target_vendor = "apple")]
+    const REMOTE_NAME: &[u8] = "remote-\u{e8}.sock".as_bytes();
     use crate::fixture::LocalForwarding;
     use std::{
         ffi::OsStr,
@@ -140,7 +152,7 @@ mod unix {
     async fn direct_streamlocal_uses_the_authorized_unix_socket() {
         timeout(Duration::from_secs(10), async {
             let directory = tempfile::tempdir().unwrap();
-            let direct = directory.path().join(OsStr::from_bytes(b"direct-\xff.sock"));
+            let direct = directory.path().join(OsStr::from_bytes(DIRECT_NAME));
             let host = HostKey::generate().unwrap();
             let identity = HostKey::generate().unwrap();
             let client = Pinned(host.public_key());
@@ -197,7 +209,7 @@ mod unix {
     async fn remote_streamlocal_cancels_and_removes_its_path_while_a_channel_remains_open() {
         timeout(Duration::from_secs(10), async {
             let directory = tempfile::tempdir().unwrap();
-            let remote = directory.path().join(OsStr::from_bytes(b"remote-\xfe.sock"));
+            let remote = directory.path().join(OsStr::from_bytes(REMOTE_NAME));
             let destination = directory.path().join("destination.sock");
             let target = UnixListener::bind(&destination).unwrap();
             let host = HostKey::generate().unwrap();

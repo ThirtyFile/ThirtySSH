@@ -1,6 +1,6 @@
 //! Client streams to the PuTTY Pageant SSH agent on Windows.
 //!
-//! [`Pageant`] is a byte stream that carries the SSH agent protocol to the
+//! `Pageant` is a byte stream that carries the SSH agent protocol to the
 //! Pageant instance of the current Windows account.
 #![deny(unsafe_op_in_unsafe_fn)]
 
