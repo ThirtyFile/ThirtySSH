@@ -1,6 +1,8 @@
 # ThirtySSH
 
 [![CI](https://github.com/thirtyfile/ThirtySSH/actions/workflows/ci.yml/badge.svg)](https://github.com/thirtyfile/ThirtySSH/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/thirtyssh.svg)](https://crates.io/crates/thirtyssh)
+[![docs.rs](https://docs.rs/thirtyssh/badge.svg)](https://docs.rs/thirtyssh)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文**
@@ -27,11 +29,11 @@
 
 ## 安裝
 
-ThirtySSH 尚未發佈到 crates.io,請直接相依這個 repository:
+從 crates.io 加入 ThirtySSH:
 
 ```toml
 [dependencies]
-thirtyssh = { git = "https://github.com/thirtyfile/ThirtySSH" }
+thirtyssh = "0.1"
 tokio = { version = "1", features = ["macros", "rt"] }
 ```
 
@@ -97,7 +99,7 @@ cargo run -p thirtyssh --example openssh_exec -- \
   HOST 22 USER ~/.ssh/known_hosts ~/.ssh/id_ed25519 "uname -a"
 ```
 
-API 文件可用 `cargo doc --workspace --no-deps --open` 產生。
+API 文件在 [docs.rs](https://docs.rs/thirtyssh)。
 
 ## Cargo feature
 

@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-23
+
 ### Added
 - Initial public version of the `thirtyssh`, `thirtyssh-secretbuf` and
   `thirtyssh-pageant` crates. See the README for the feature list.

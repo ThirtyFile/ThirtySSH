@@ -1,6 +1,8 @@
 # ThirtySSH
 
 [![CI](https://github.com/thirtyfile/ThirtySSH/actions/workflows/ci.yml/badge.svg)](https://github.com/thirtyfile/ThirtySSH/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/thirtyssh.svg)](https://crates.io/crates/thirtyssh)
+[![docs.rs](https://docs.rs/thirtyssh/badge.svg)](https://docs.rs/thirtyssh)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 **English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
@@ -30,11 +32,11 @@ layers directly.
 
 ## Installation
 
-ThirtySSH is not on crates.io yet. Depend on the repository:
+Add ThirtySSH from crates.io:
 
 ```toml
 [dependencies]
-thirtyssh = { git = "https://github.com/thirtyfile/ThirtySSH" }
+thirtyssh = "0.1"
 tokio = { version = "1", features = ["macros", "rt"] }
 ```
 
@@ -102,7 +104,7 @@ cargo run -p thirtyssh --example openssh_exec -- \
   HOST 22 USER ~/.ssh/known_hosts ~/.ssh/id_ed25519 "uname -a"
 ```
 
-Generate the API documentation with `cargo doc --workspace --no-deps --open`.
+The API documentation is on [docs.rs](https://docs.rs/thirtyssh).
 
 ## Cargo features
 
