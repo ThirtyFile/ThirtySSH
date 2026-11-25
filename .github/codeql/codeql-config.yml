@@ -1,0 +1,6 @@
+# Integration tests and benchmarks hold fixed keys and passwords on purpose,
+# each of which CodeQL would report as a hard-coded secret.
+name: ThirtySSH
+paths-ignore:
+  - "**/tests/**"
+  - "**/benches/**"

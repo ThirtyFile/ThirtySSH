@@ -53,15 +53,14 @@ Apache-2.0.
 
 ## Releasing
 
-Maintainers publish a release by tagging the version that `Cargo.toml`
-declares:
+Update `CHANGELOG.md` and the version in `Cargo.toml` in a pull request and
+merge it. Then start the `Release` workflow on `main` with that version:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+gh workflow run release.yml --ref main -f version=X.Y.Z
 ```
 
-The `Release` workflow tests the workspace, publishes the three crates to
-crates.io in dependency order and creates the GitHub release. Update
-`CHANGELOG.md` and the version in `Cargo.toml` before tagging. A published
-version cannot be replaced.
+It runs the checks and CodeQL, publishes the three crates to crates.io in
+dependency order, and creates the GitHub release and its tag. A published
+version cannot be replaced. If a step fails, fix the cause and run the workflow
+again: crates that were already uploaded are skipped.
